@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EO Flows — Digitek</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf3e3;
+    --bg-soft: #faecd9;
+    --ink: #2b1810;
+    --ink-soft: #5a3a26;
+    --muted: #8a6e58;
+    --border: #e3cdb0;
+    --c1:  #fde0bd; --c1b: #a3501e;
+    --c2:  #f5e1cc; --c2b: #7a4a1e;
+    --c3:  #f8dfba; --c3b: #804522;
+    --c4:  #e9d4b8; --c4b: #5e3618;
+    --c5:  #fbd0a0; --c5b: #a04518;
+    --c6:  #f3d9b6; --c6b: #6f3d1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: 'Instrument Sans', sans-serif; min-height: 100vh; font-size: 14px; line-height: 1.55; }
+
+  /* HEADER */
+  .header { padding: 48px 48px 36px; border-bottom: 2px solid var(--ink); background: var(--bg); }
+  .header-grid { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; max-width: 1280px; margin: 0 auto; }
+  .header-tag { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .header h1 { font-family: 'Clash Display', sans-serif; font-size: clamp(30px, 4.8vw, 52px); font-weight: 700; line-height: 1.0; letter-spacing: -1px; }
+  .header h1 em { font-style: normal; color: var(--c1b); }
+  .header-sub { font-size: 14px; color: var(--muted); margin-top: 14px; font-weight: 300; max-width: 560px; line-height: 1.65; }
+  .header-stats { display: flex; flex-direction: column; gap: 10px; text-align: right; }
+  .stat-item { font-family: 'Space Mono', monospace; }
+  .stat-num { font-size: 24px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .header code { font-family: 'Space Mono', monospace; font-size: 12px; background: rgba(43,24,16,0.08); padding: 1px 5px; border-radius: 3px; }
+
+  /* TABS */
+  .tabs-bar { padding: 18px 48px; border-bottom: 1px solid var(--border); background: var(--bg-soft); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .tabs-bar .legend-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .tab-pill { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 30px; cursor: pointer; font-family: 'Instrument Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-soft); transition: all 0.18s; user-select: none; }
+  .tab-pill:hover { background: var(--bg-soft); transform: translateY(-1px); }
+  .tab-pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .tab-pill .tag { font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; opacity: 0.7; }
+  .tab-pill.active .tag { color: var(--c5); opacity: 1; }
+  .tab-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c1b); }
+  .tab-pill[data-tab="afterhost"] .dot { background: var(--c4b); }
+  .tab-pill[data-tab="flows"] .dot { background: var(--c5b); }
+
+  /* PANELS */
+  .panels { padding: 36px 48px 60px; max-width: 1280px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .panel-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+  .panel-num { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--c1b); letter-spacing: 1.4px; }
+  .panel-title { font-family: 'Clash Display', sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -0.4px; }
+  .panel-sub { color: var(--muted); font-size: 13px; margin-left: auto; text-align: right; max-width: 380px; line-height: 1.5; }
+  .panel-sub code { font-family: 'Space Mono', monospace; font-size: 11.5px; background: rgba(43,24,16,0.08); padding: 1px 5px; border-radius: 3px; }
+
+  /* CARD GRID (Tab 1 / Tab 2) */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; }
+  .card { background: var(--c1); border: 1.5px solid var(--ink); border-radius: 6px; padding: 20px 22px 22px; position: relative; overflow: hidden; }
+  .card.c2 { background: var(--c2); } .card.c3 { background: var(--c3); } .card.c4 { background: var(--c4); } .card.c5 { background: var(--c5); } .card.c6 { background: var(--c6); }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .card-num { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; background: var(--ink); color: var(--bg); padding: 3px 8px; border-radius: 3px; letter-spacing: 1.2px; }
+  .card-tag { font-family: 'Space Mono', monospace; font-size: 9.5px; color: var(--c1b); letter-spacing: 1.4px; text-transform: uppercase; font-weight: 700; }
+  .card.c2 .card-tag { color: var(--c2b); } .card.c3 .card-tag { color: var(--c3b); } .card.c4 .card-tag { color: var(--c4b); } .card.c5 .card-tag { color: var(--c5b); } .card.c6 .card-tag { color: var(--c6b); }
+  .card h3 { font-family: 'Clash Display', sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.3px; color: var(--ink); margin-top: 4px; margin-bottom: 8px; }
+  .card .lede { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 12px; }
+  .card .meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .meta-chip { font-family: 'Space Mono', monospace; font-size: 9.5px; background: rgba(43,24,16,0.08); color: var(--ink); padding: 3px 9px; border-radius: 3px; letter-spacing: 0.6px; }
+  .meta-chip b { font-weight: 700; }
+  .card ul { list-style: none; padding: 0; margin: 0; }
+  .card li { font-size: 12.5px; color: var(--ink); padding: 5px 0 5px 18px; position: relative; line-height: 1.55; border-top: 1px dashed rgba(43,24,16,0.18); }
+  .card li:first-child { border-top: none; }
+  .card li::before { content: "▸"; position: absolute; left: 0; top: 5px; color: var(--ink); font-size: 11px; }
+  .card li b { color: var(--ink); font-weight: 600; }
+  .card li code { font-family: 'Space Mono', monospace; font-size: 11px; background: rgba(43,24,16,0.12); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .card .note { margin-top: 12px; padding: 9px 11px; background: rgba(43,24,16,0.06); border-left: 2.5px solid var(--ink); font-size: 11.5px; color: var(--ink-soft); font-style: italic; border-radius: 0 4px 4px 0; }
+
+  .deliver { margin-top: 28px; background: var(--ink); color: var(--bg); border-radius: 6px; padding: 22px 26px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; }
+  .deliver .icon { font-family: 'Space Mono', monospace; font-size: 24px; font-weight: 700; color: var(--c5); }
+  .deliver h4 { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 4px; }
+  .deliver p { font-size: 12.5px; color: rgba(253,243,227,0.78); line-height: 1.55; }
+  .deliver .seq { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--c5); letter-spacing: 1.4px; }
+  .deliver code { background: rgba(253,243,227,0.18); color: var(--c5); padding: 1px 5px; border-radius: 3px; font-family: 'Space Mono', monospace; font-size: 11px; }
+
+  /* ─── FLOW DIAGRAMS (Tab 3) ─── */
+  .flow-wrap { max-width: 780px; margin: 0 auto 48px; padding-top: 4px; }
+  .flow-wrap:last-child { margin-bottom: 8px; }
+  .flow-heading { margin-bottom: 12px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .flow-heading .badge { font-family: 'Space Mono', monospace; font-size: 9.5px; font-weight: 700; padding: 4px 10px; border-radius: 4px; letter-spacing: 1.4px; background: var(--ink); color: var(--bg); }
+  .flow-heading .badge.b2 { background: var(--c4b); color: var(--bg); }
+  .flow-heading .badge.b3 { background: var(--c5b); color: var(--bg); }
+  .flow-heading h2 { font-family: 'Clash Display', sans-serif; font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
+  .flow-heading .tagline { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .flow-intro { font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 20px; padding: 12px 16px; background: var(--bg-soft); border-left: 3px solid var(--c1b); border-radius: 0 5px 5px 0; }
+  .flow-intro.b2 { border-left-color: var(--c4b); }
+  .flow-intro.b3 { border-left-color: var(--c5b); }
+
+  .step { background: var(--c1); border: 1.5px solid var(--ink); border-radius: 6px; padding: 16px 20px 18px; position: relative; }
+  .step.s2 { background: var(--c2); } .step.s3 { background: var(--c3); } .step.s4 { background: var(--c4); } .step.s5 { background: var(--c5); }
+  .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--bg); font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-title { font-family: 'Clash Display', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+  .step-when { font-family: 'Space Mono', monospace; font-size: 9.5px; color: var(--ink-soft); margin-left: auto; letter-spacing: 1.2px; text-transform: uppercase; }
+  .step ul { list-style: none; padding: 0; margin: 4px 0 0; }
+  .step li { font-size: 12.5px; padding: 3px 0 3px 16px; position: relative; line-height: 1.55; color: var(--ink); }
+  .step li::before { content: "→"; position: absolute; left: 0; top: 3px; color: var(--ink); font-size: 11px; font-weight: 700; }
+  .step li b { font-weight: 600; }
+  .step li code { font-family: 'Space Mono', monospace; font-size: 11px; background: rgba(43,24,16,0.12); padding: 1px 5px; border-radius: 3px; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; padding: 6px 0; font-family: 'Space Mono', monospace; font-size: 18px; color: var(--ink); font-weight: 700; }
+  .arrow::before { content: "↓"; }
+
+  .loop {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 6px;
+  }
+  .loop .arrow-back {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--c5);
+    line-height: 1;
+  }
+  .loop b { color: var(--c5); }
+  .loop p { font-size: 12.5px; line-height: 1.55; color: rgba(253,243,227,0.85); }
+
+  .flow-out {
+    margin-top: 14px;
+    background: var(--bg-soft);
+    border: 1.5px dashed var(--ink);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .flow-out .ic { font-family: 'Space Mono', monospace; font-size: 18px; color: var(--c5b); font-weight: 700; }
+  .flow-out b { color: var(--ink); }
+
+  /* footer */
+  footer { padding: 18px 48px 30px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; }
+
+  @media (max-width: 760px) {
+    .header { padding: 32px 24px 26px; }
+    .tabs-bar { padding: 14px 24px; }
+    .panels { padding: 26px 24px 40px; }
+    .header-grid { grid-template-columns: 1fr; }
+    .header-stats { text-align: left; flex-direction: row; gap: 26px; }
+    .deliver, .loop, .flow-out { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-grid">
+    <div>
+      <div class="header-tag">Baptist Digitek · Next.js · SEO Playbook</div>
+      <h1>EO Flows<br><em>Digitek</em></h1>
+      <p class="header-sub">
+        Every SEO task split by where it physically happens, plus how the loops actually run. <b>Tab 1</b> — work inside the <code>.tsx</code> codebase. <b>Tab 2</b> — work that needs the site live on Hostinger. <b>Tab 3</b> — end-to-end flows showing how AEO/AIEO/GEO, review automation and tracking actually run.
+      </p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-item"><div class="stat-num">7</div><div class="stat-label">Routes</div></div>
+      <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">AI Engines Tracked</div></div>
+      <div class="stat-item"><div class="stat-num">3</div><div class="stat-label">End-to-End Flows</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-bar">
+  <span class="legend-label">Mode</span>
+  <div class="tab-pill active" data-tab="incode">
+    <span class="dot"></span><span>In-Code Edits</span><span class="tag">Tab 1 · Pre-Host</span>
+  </div>
+  <div class="tab-pill" data-tab="afterhost">
+    <span class="dot"></span><span>After Hosting</span><span class="tag">Tab 2 · Live</span>
+  </div>
+  <div class="tab-pill" data-tab="flows">
+    <span class="dot"></span><span>Flows</span><span class="tag">Tab 3 · End-to-End</span>
+  </div>
+</div>
+
+<div class="panels">
+
+  <!-- ============ TAB 1 ============ -->
+  <div class="panel active" data-panel="incode">
+    <div class="panel-head">
+      <span class="panel-num">TAB 1 / PRE-HOST</span>
+      <h2 class="panel-title">Edits inside the codebase</h2>
+      <p class="panel-sub">All changes happen in <code>.tsx</code> source files; delivered to the developer as a diff/branch; built once into the static export and uploaded to Hostinger.</p>
+    </div>
+    <div class="grid">
+      <div class="card c1">
+        <div class="card-head"><span class="card-num">01</span><span class="card-tag">ON-PAGE</span></div>
+        <h3>On-Page SEO</h3>
+        <p class="lede">Per-route content hygiene — what each page says about itself in the head and how the body is structured.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> app/[route]/page.tsx</span><span class="meta-chip"><b>HOW</b> metadata + JSX</span></div>
+        <ul>
+          <li><b>Title tags</b> — unique 50–60 char title per page in the <code>metadata.title</code> field of each <code>page.tsx</code>. Next.js compiles it to <code>&lt;title&gt;</code>.</li>
+          <li><b>Meta descriptions</b> — 140–160 char <code>metadata.description</code> per page. Compiled to <code>&lt;meta name="description"&gt;</code>.</li>
+          <li><b>One H1 per page</b> + clean H2/H3 hierarchy in the JSX. No skipped levels.</li>
+          <li><b>Primary keyword</b> placed once in title, H1, first 100 words, slug, OG title. No stuffing (&lt;2% density).</li>
+          <li><b>Image alt + filenames</b> — descriptive <code>alt</code> on every <code>&lt;Image&gt;</code> + renamed source files.</li>
+          <li><b>Clean URL slugs</b> — folder name under <code>app/</code> = the URL.</li>
+          <li><b>Internal linking</b> — 3–5 descriptive <code>&lt;Link&gt;</code> elements per page using <code>next/link</code>.</li>
+        </ul>
+      </div>
+      <div class="card c2">
+        <div class="card-head"><span class="card-num">02</span><span class="card-tag">TECHNICAL</span></div>
+        <h3>Technical SEO</h3>
+        <p class="lede">The site's plumbing — config and build-level decisions that shape crawlability and Core Web Vitals.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> next.config.mjs · app/ · components</span><span class="meta-chip"><b>HOW</b> config + components</span></div>
+        <ul>
+          <li><b>Static export config</b> — <code>output: 'export'</code> + <code>images: { unoptimized: true }</code> in <code>next.config.mjs</code> so the build produces the <code>out/</code> folder Hostinger can serve.</li>
+          <li><b>Image dimensions</b> — explicit <code>width/height</code> on every <code>&lt;Image&gt;</code> to prevent CLS.</li>
+          <li><b>JS defer/async</b> — third-party scripts loaded via <code>next/script</code> with <code>strategy="afterInteractive"</code> or <code>lazyOnload</code>.</li>
+          <li><b>sitemap.ts</b> — new file at <code>app/sitemap.ts</code>; Next generates <code>/sitemap.xml</code> at build.</li>
+          <li><b>robots.ts</b> — new file at <code>app/robots.ts</code>; Next generates <code>/robots.txt</code> at build.</li>
+          <li><b>Canonical tags</b> — <code>metadata.alternates.canonical</code> per route, absolute URL.</li>
+          <li><b>Mobile-friendly</b> — Tailwind responsive utilities; verified via Lighthouse later.</li>
+        </ul>
+      </div>
+      <div class="card c5">
+        <div class="card-head"><span class="card-num">03</span><span class="card-tag">HTML PROTOCOLS</span></div>
+        <h3>Advanced HTML Protocols</h3>
+        <p class="lede">Everything that lives in <code>&lt;head&gt;</code> beyond the basics — controls previews and engine signals.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> app/layout.tsx + each page.tsx</span><span class="meta-chip"><b>HOW</b> Metadata API</span></div>
+        <ul>
+          <li><b>Open Graph</b> — <code>metadata.openGraph</code> with title, description, url, type, locale=<code>en_IN</code>, siteName, 1200×630 image.</li>
+          <li><b>Twitter Cards</b> — <code>metadata.twitter</code> with <code>card: "summary_large_image"</code>, site handle, title, description, image.</li>
+          <li><b>Resource hints</b> — <code>next/font</code> auto preconnect + <code>priority</code> flag on LCP <code>&lt;Image&gt;</code> auto preload.</li>
+          <li><b>Lang</b> — change <code>&lt;html lang="en"&gt;</code> to <code>lang="en-IN"</code> in <code>app/layout.tsx</code>.</li>
+          <li><b>Robots meta</b> — <code>metadata.robots = { index: true, follow: true }</code> globally.</li>
+          <li><b>Theme-color + referrer</b> — set in layout metadata.</li>
+        </ul>
+      </div>
+      <div class="card c4">
+        <div class="card-head"><span class="card-num">04</span><span class="card-tag">SCHEMA · JSON-LD</span></div>
+        <h3>Main + Sub Schemas</h3>
+        <p class="lede">Structured data injected as <code>&lt;script type="application/ld+json"&gt;</code> into each page's server-rendered HTML.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> app/layout.tsx + per-page + components/seo</span><span class="meta-chip"><b>HOW</b> JSON-LD components</span></div>
+        <ul>
+          <li><b>Main — Organization</b> on homepage: legal name, logo, URL, contactPoint, sameAs, address.</li>
+          <li><b>Main — WebSite</b> on homepage: url, name, potentialAction.</li>
+          <li><b>Sub — LocalBusiness</b> on <code>/contact</code>: full NAP, geo, openingHours, telephone.</li>
+          <li><b>Sub — Service</b> on <code>/services</code> + <code>/solutions</code>: serviceType, areaServed, provider, offers.</li>
+          <li><b>Sub — FAQPage</b> wherever FAQs exist (3–5 Q&As each).</li>
+          <li><b>Sub — BreadcrumbList</b> on every inner route.</li>
+        </ul>
+      </div>
+      <div class="card c3">
+        <div class="card-head"><span class="card-num">05</span><span class="card-tag">BREADCRUMBS</span></div>
+        <h3>Breadcrumbs</h3>
+        <p class="lede">Both the visible nav trail and the matching schema so Google can show the crumb in search.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> components/ui/breadcrumb.tsx</span><span class="meta-chip"><b>HOW</b> shared component</span></div>
+        <ul>
+          <li><b>Visible breadcrumb nav</b> — new <code>&lt;Breadcrumb&gt;</code> component with <code>aria-label="breadcrumb"</code>, driven by the route segments.</li>
+          <li><b>BreadcrumbList schema</b> — same component emits matching JSON-LD on every page it renders on.</li>
+          <li><b>Mounted in</b> <code>app/layout.tsx</code> just below the navbar, hidden on the homepage.</li>
+        </ul>
+      </div>
+      <div class="card c6">
+        <div class="card-head"><span class="card-num">06</span><span class="card-tag">AIEO + GEO · CODE PART</span></div>
+        <h3>AI-Engine &amp; Entity Foundation</h3>
+        <p class="lede">The code-side prep that lets AI engines recognise the brand. The live-side activation happens in Tab 2.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> lib/site.ts + layout.tsx + page bodies</span><span class="meta-chip"><b>HOW</b> schema + content</span></div>
+        <ul>
+          <li><b><code>sameAs</code> array</b> — real social + GBP URLs wired into Organization schema.</li>
+          <li><b>Entity facts</b> — founding year, legal name, services, area, in <code>lib/site.ts</code>.</li>
+          <li><b>GEO content format</b> — 1-sentence service definitions + brand stats added in JSX so AI engines have quotable hooks.</li>
+          <li><b><code>en-IN</code> locale</b> on both <code>&lt;html&gt;</code> and OG <code>locale</code>.</li>
+        </ul>
+        <div class="note">Wikidata submission, Reddit/Quora seeding, and brand-mention monitoring all happen <b>after</b> hosting — see Tab 2.</div>
+      </div>
+    </div>
+    <div class="deliver">
+      <div class="icon">↦</div>
+      <div><h4>Delivery to the developer</h4><p>After edits, the dev gets a <b>diff + per-file changelog</b>: changed files, before/after snippets per <code>.tsx</code>. They commit it to the repo, run <code>npm run build</code>, and upload <code>out/</code> to Hostinger. After that, Tab 2 begins.</p></div>
+      <div class="seq">DIFF → COMMIT → BUILD → DEPLOY</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2 ============ -->
+  <div class="panel" data-panel="afterhost">
+    <div class="panel-head">
+      <span class="panel-num">TAB 2 / LIVE-URL OPERATIONS</span>
+      <h2 class="panel-title">Work that needs the site live</h2>
+      <p class="panel-sub">Tracking, validation, GBP, content, citations, entity work, reviews — all driven through Cowork against the deployed Hostinger URL.</p>
+    </div>
+    <div class="grid">
+      <div class="card c1">
+        <div class="card-head"><span class="card-num">01</span><span class="card-tag">TRACKING · OUTPUT VISIBILITY</span></div>
+        <h3>Tracking Activation</h3>
+        <p class="lede">Stand up the measurement layer on the live URL and route every signal into one dashboard the client can open.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> GA4 + GTM + GSC + Looker</span><span class="meta-chip"><b>SEEN IN</b> Looker dashboard</span></div>
+        <ul>
+          <li><b>GA4 property</b> live under <code>digi_design</code>; conversions defined. <b>Seen in:</b> GA4 reports.</li>
+          <li><b>GTM container</b> firing on live URL — verified in GA4 DebugView.</li>
+          <li><b>Search Console</b> verified by DNS, sitemap submitted. <b>Seen in:</b> GSC dashboard.</li>
+          <li><b>AI Referral segment</b> in GA4 — <code>chatgpt|perplexity|gemini|claude|bing-chat|copilot</code>.</li>
+          <li><b>Brand-mention monitor</b> — emails to inbox + logged.</li>
+          <li><b>Looker Studio dashboard</b> — single live view combining everything. <b>Client-facing surface.</b></li>
+        </ul>
+      </div>
+      <div class="card c2">
+        <div class="card-head"><span class="card-num">02</span><span class="card-tag">VALIDATION</span></div>
+        <h3>Live-URL Validation</h3>
+        <p class="lede">Confirm every code edit from Tab 1 is actually present and parseable by Google + social platforms.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> against live URL</span><span class="meta-chip"><b>PASS GATE</b> Day 4</span></div>
+        <ul>
+          <li><b>Semrush Site Audit re-crawl</b> — target 0 errors.</li>
+          <li><b>Google Rich Results Test</b> — every JSON-LD block valid.</li>
+          <li><b>Schema Markup Validator</b> — full structural pass.</li>
+          <li><b>Facebook Sharing Debugger</b> + <b>Twitter Card Validator</b>.</li>
+          <li><b>Lighthouse</b> — Performance 90+, SEO 100, A11y 90+, Best Practices 100.</li>
+          <li><b>GSC inspect URL</b> — indexability + sitemap acceptance.</li>
+        </ul>
+      </div>
+      <div class="card c5">
+        <div class="card-head"><span class="card-num">03</span><span class="card-tag">LOCAL · GBP</span></div>
+        <h3>Local SEO — Google Business Profile</h3>
+        <p class="lede">External profile work that runs in parallel with deploy. GBP claimed, so 29-item runs in Week 1.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> business.google.com</span><span class="meta-chip"><b>TRACKER</b> gbp-checklist.xlsx</span></div>
+        <ul>
+          <li><b>NAP audit</b> — byte-identical across site, schema, GBP.</li>
+          <li><b>29-item profile optimisation</b> — categories, description, hours, attributes, services, products.</li>
+          <li><b>10+ photos</b> — logo, cover, interior, work samples; geo-tagged.</li>
+          <li><b>3–5 owner-posted Q&amp;A</b> + first 2 GBP posts.</li>
+          <li><b>Review link generated</b> + owner replies to all existing reviews.</li>
+          <li><b>Tier-1 directory citations</b> — Justdial, Sulekha, IndiaMART.</li>
+        </ul>
+      </div>
+      <div class="card c4">
+        <div class="card-head"><span class="card-num">04</span><span class="card-tag">OFF-PAGE</span></div>
+        <h3>Off-Page Foundation &amp; Send</h3>
+        <p class="lede">Foundation Week 1; sending Week 3+ after mailbox warm-up.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHERE</b> Gmail + Semrush + Vibe</span><span class="meta-chip"><b>TRACKER</b> 07_outreach-crm.xlsx</span></div>
+        <ul>
+          <li><b>Business directory submissions</b> — Tier-1 + niche (NAP from <code>lib/site.ts</code>).</li>
+          <li><b>Social profiles</b> created/claimed; URLs fed back into <code>sameAs</code>.</li>
+          <li><b>100-prospect outreach list</b> via Semrush Backlink Gap + Vibe Prospecting (DR≥40 highlighted).</li>
+          <li><b>Outreach emails drafted</b> in Gmail; <b>sent in approved batches Week 3+</b>.</li>
+          <li><b>Disavow file</b> uploaded to GSC if toxic backlinks found.</li>
+        </ul>
+        <div class="note">Earned backlinks materialise over 4–12 weeks. Week-1 deliverable is foundation + pipeline.</div>
+      </div>
+      <div class="card c3">
+        <div class="card-head"><span class="card-num">05</span><span class="card-tag">AEO</span></div>
+        <h3>Answer Engine Optimisation</h3>
+        <p class="lede">Measure and grow citation rate across the four AI engines.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHEN</b> Week 2 baseline, monthly</span><span class="meta-chip"><b>TRACKER</b> 03_citation-tracker.xlsx</span></div>
+        <ul>
+          <li><b>Baseline 80-row test</b> — 20 prompts × 4 engines.</li>
+          <li><b>Captures</b> citation rate per engine + competitor cited + content format.</li>
+          <li><b>Page reformatting</b> — citation hooks added (flows back to code edits + redeploy).</li>
+          <li><b>Monthly re-test on the 1st</b> — losers queued for refresh.</li>
+        </ul>
+      </div>
+      <div class="card c6">
+        <div class="card-head"><span class="card-num">06</span><span class="card-tag">AIEO</span></div>
+        <h3>AI Engine Optimisation</h3>
+        <p class="lede">Grow brand mentions inside AI answers — the brand is <em>named</em> with or without a citation.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHEN</b> Week 2 setup, monthly review</span><span class="meta-chip"><b>SEEN IN</b> AI Referral + entity-tracker</span></div>
+        <ul>
+          <li><b>Answer-inclusion rate</b> captured in same 80-row test.</li>
+          <li><b>Reddit / Quora seed answers</b> in the niche.</li>
+          <li><b>AI Referral segment</b> in GA4 captures real traffic from AI tools.</li>
+          <li><b>sameAs deployed</b> — code-side <code>sameAs</code> array now resolves to live profiles.</li>
+        </ul>
+      </div>
+      <div class="card c1">
+        <div class="card-head"><span class="card-num">07</span><span class="card-tag">GEO</span></div>
+        <h3>Generative Engine Optimisation</h3>
+        <p class="lede">Make Google + AI engines recognise the brand as a known entity — Knowledge Panel territory.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHEN</b> Week 2 + Week 3 + quarterly</span><span class="meta-chip"><b>TRACKER</b> 10_entity-tracker.xlsx</span></div>
+        <ul>
+          <li><b>Wikidata brand entry</b> submitted once account seasoned (3–7 days).</li>
+          <li><b>Entity audit</b> — Knowledge Panel, Wikidata QID, sameAs, directories, per-engine recognition.</li>
+          <li><b>Brand-mention monitor</b> reviewed monthly on the 15th.</li>
+          <li><b>Quarterly deep entity audit</b> — sameAs sweep, DR40+ citation count.</li>
+        </ul>
+      </div>
+      <div class="card c2">
+        <div class="card-head"><span class="card-num">08</span><span class="card-tag">REVIEWS</span></div>
+        <h3>Review Automation</h3>
+        <p class="lede">Daily review-request engine on top of the live GBP. Owner approves before any send.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHEN</b> Week 3 setup, then daily</span><span class="meta-chip"><b>TRACKER</b> 06_review-tracker.xlsx</span></div>
+        <ul>
+          <li><b>3 templates customised</b> — Request 1, Request 2, Thanks.</li>
+          <li><b>Send channel</b> — WhatsApp Web (≤15/day) or Wati API.</li>
+          <li><b>Review link</b> pasted into <code>00_context/about.md</code>.</li>
+          <li><b>5-customer test batch</b> in <code>06_review-tracker.xlsx "Pipeline"</code> + dry-run.</li>
+          <li><b>Daily 10 AM run</b> — drafts message; owner confirms.</li>
+          <li><b>New-review sweep</b> via Semrush Local; reply drafted.</li>
+        </ul>
+      </div>
+      <div class="card c5">
+        <div class="card-head"><span class="card-num">09</span><span class="card-tag">REPORTING CADENCE</span></div>
+        <h3>Reporting &amp; Cadence</h3>
+        <p class="lede">Rhythms that keep the system honest and the client informed.</p>
+        <div class="meta-row"><span class="meta-chip"><b>WHEN</b> Daily / Weekly / Monthly / Quarterly</span><span class="meta-chip"><b>SEEN IN</b> Looker + email + changelog</span></div>
+        <ul>
+          <li><b>Daily 10 AM</b> — review automation + brand-mention sweep. Logged.</li>
+          <li><b>Sun 7 PM</b> — Plan next week's GBP (2 posts + Q&amp;A + photo theme).</li>
+          <li><b>Mon 9 AM</b> — Weekly report emailed (AI Referral, mentions, GEO, conversions).</li>
+          <li><b>Monthly 1st</b> — 80-row AEO+GEO+AIEO retest.</li>
+          <li><b>Monthly 15th</b> — Brand mentions + Reddit/Quora review.</li>
+          <li><b>Quarterly</b> — Entity audit + HTML protocol re-run + outreach refresh + strategic review.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="deliver">
+      <div class="icon">●</div>
+      <div><h4>Operating mode</h4><p>From here the system runs on a fixed rhythm via Cowork + Semrush + Gmail + Calendar + Claude in Chrome. <b>~15–18 hours per client per month</b> of review-and-approve time.</p></div>
+      <div class="seq">LIVE · MEASURED · MAINTAINED</div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3 — FLOWS ============ -->
+  <div class="panel" data-panel="flows">
+    <div class="panel-head">
+      <span class="panel-num">TAB 3 / END-TO-END</span>
+      <h2 class="panel-title">How the loops actually run</h2>
+      <p class="panel-sub">Three engines that keep growing the brand after launch. Each shown step by step — what we do, where it happens, and how it loops back.</p>
+    </div>
+
+    <!-- ===== FLOW 1 — AEO / AIEO / GEO ===== -->
+    <div class="flow-wrap">
+      <div class="flow-heading">
+        <span class="badge">FLOW 01</span>
+        <h2>AEO · AIEO · GEO Loop</h2>
+        <span class="tagline">monthly cycle · 4 AI engines</span>
+      </div>
+      <div class="flow-intro">
+        We <b>ask</b> the four AI engines real customer questions to see where the brand stands today, <b>apply</b> what we learn back into the website, <b>seed</b> our presence off-site where AI engines crawl, then <b>re-test</b> next month to confirm growth.
+      </div>
+
+      <div class="step s1">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Ask the AI engines</div><div class="step-when">Week 2 baseline · monthly</div></div>
+        <ul>
+          <li><b>20 customer questions × 4 engines = 80 tests</b> across ChatGPT, Perplexity, Google AI Overviews, Gemini.</li>
+          <li>Driven via <b>Claude in Chrome</b>; screenshots saved to <code>05_aeo_geo/</code>.</li>
+          <li>Capture <b>citation rate</b> (AEO), <b>mention rate</b> (AIEO), <b>entity recognition rate</b> (GEO) per engine.</li>
+          <li>Log competitors cited + their content format (stat / definition / list / FAQ).</li>
+          <li>Output → <code>03_citation-tracker.xlsx</code>, <code>09_geo-tracker.xlsx</code>, <code>10_entity-tracker.xlsx</code>.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s2">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Apply on the website</div><div class="step-when">code edits → rebuild → redeploy</div></div>
+        <ul>
+          <li>Add <b>FAQ sections + FAQPage schema</b> for the questions AI engines answered well (and badly).</li>
+          <li>Write <b>AI-friendly blog posts</b> — definitions, stat blocks, lists, Q&amp;A formatted.</li>
+          <li>Insert <b>citation hooks</b> in body copy (short, quotable, dateable facts).</li>
+          <li>Keep <b>Organization + LocalBusiness + sameAs</b> schema current.</li>
+          <li>Run <b>Task 6 — GEO Content Format Check</b> on existing pages to reformat them for citation.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s3">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Seed off-site</div><div class="step-when">Week 2 setup · continuous</div></div>
+        <ul>
+          <li>Post <b>helpful seed answers on Reddit + Quora</b> in our niche — AI engines crawl these heavily.</li>
+          <li>Submit <b>Wikidata brand entry</b> (after seasoning the account 3–7 days).</li>
+          <li>Publish a <b>Perplexity Page</b> using one of our cornerstone articles.</li>
+          <li>Activate <b>brand-mention monitor</b> (Google Alerts / Mention.com) → alerts feed <code>10_geo_aieo/brand-mentions-log.xlsx</code>.</li>
+          <li>Run <b>Task 7 — Entity Audit</b>: Knowledge Panel, Wikidata QID, sameAs propagation, directory listings.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s4">
+        <div class="step-head"><div class="step-num">4</div><div class="step-title">Re-test &amp; measure</div><div class="step-when">monthly 1st · monthly 15th</div></div>
+        <ul>
+          <li><b>Monthly 1st</b> — re-run the same 80-row test → diff against last month's scores.</li>
+          <li><b>Monthly 15th</b> — brand-mention + Reddit/Quora review; new mentions logged + outreach drafted.</li>
+          <li>Citation / mention / recognition rates should climb every cycle.</li>
+          <li><b>Pages losing citations</b> get queued back to Step 2 for a refresh.</li>
+          <li>Trend visible in the <b>weekly Monday report</b> + Looker dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="loop">
+        <div><b>Loop back to Step 2</b><p>Every month, the new test reveals which pages slipped, which competitors gained, and which engines need work. Those become next month's code edits — and the cycle continues forever.</p></div>
+        <div class="arrow-back">↺</div>
+      </div>
+
+      <div class="flow-out">
+        <div class="ic">✓</div>
+        <div><b>End-to-end outcome:</b> citation rate climbs (e.g. 8 → 28 / 80), brand-mention rate climbs (5% → 35%), entity-recognition climbs (2/10 → 8/10) over the first 90 days. The four AI engines start treating the brand as a known, quotable source.</div>
+      </div>
+    </div>
+
+    <!-- ===== FLOW 2 — REVIEW AUTOMATION ===== -->
+    <div class="flow-wrap">
+      <div class="flow-heading">
+        <span class="badge b2">FLOW 02</span>
+        <h2>Review Automation</h2>
+        <span class="tagline">daily 10 AM · WhatsApp + GBP</span>
+      </div>
+      <div class="flow-intro b2">
+        Once the GBP is live and jobs start completing, the daily 10 AM engine takes over: it asks happy customers for reviews, sweeps the live GBP for new ones, drafts replies for owner approval, and feeds everything back into the weekly report.
+      </div>
+
+      <div class="step s1">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Setup (one-time, Week 3)</div><div class="step-when">Task 10</div></div>
+        <ul>
+          <li>Customise <b>3 templates</b> in client voice — <code>review-request-1.txt</code>, <code>review-request-2.txt</code>, <code>review-thanks.txt</code> — in <code>07_outreach/templates/</code>.</li>
+          <li>Choose <b>send channel</b> — WhatsApp Web (free, ≤15/day) or Wati/Interakt API (paid, no cap).</li>
+          <li>Generate the <b>Google review link</b> (<code>g.page/r/…</code>) and paste it into <code>00_context/about.md</code>.</li>
+          <li>Seed <b>5 recent customers</b> into the "Pipeline" sheet of <code>06_review-tracker.xlsx</code> + dry-run.</li>
+          <li>Add <b>Daily 10 AM calendar reminder</b> — triggers the daily run.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s2">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Daily 10 AM run</div><div class="step-when">every working day</div></div>
+        <ul>
+          <li>Open <code>06_review-tracker.xlsx</code> → "Pipeline" sheet.</li>
+          <li><b>Job complete + 1 day</b> → draft Request 1 (substitute name/service/technician/link).</li>
+          <li><b>Request 1 sent + 5 days, no review</b> → draft Request 2.</li>
+          <li><b>Review posted</b> → draft Thanks message.</li>
+          <li><b>Request 2 + 14 days no reply</b> → mark "No response", stop.</li>
+          <li><b>Owner approves the first send</b> of each batch; thereafter messages send within the WhatsApp cap.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s3">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">New-review sweep</div><div class="step-when">same daily run</div></div>
+        <ul>
+          <li>Query <b>Semrush Local</b> for new GBP reviews in the last 24 hours.</li>
+          <li>Append to "Reviews" sheet — date, platform, customer, stars, text, auto-classified sentiment.</li>
+          <li>Match the reviewer back to the Pipeline row → fill Review Posted Date + Stars.</li>
+          <li>For each new review → <b>draft a personalised owner-reply</b> (50–100 words). For negatives → acknowledge + apologise + offer offline resolution.</li>
+          <li><b>Owner approves + posts</b> the reply via GBP.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s4">
+        <div class="step-head"><div class="step-num">4</div><div class="step-title">Log &amp; report</div><div class="step-when">daily + weekly</div></div>
+        <ul>
+          <li>Each daily run logs counts to <code>08_reports/changelog-YYYY-MM-DD.md</code> — Requests 1/2 sent, Thanks sent, new reviews captured, errors.</li>
+          <li><b>Monday 9 AM weekly report</b> summarises the week's review activity for the client.</li>
+          <li><b>Looker Studio</b> dashboard shows the review count trend + average rating.</li>
+        </ul>
+      </div>
+
+      <div class="loop">
+        <div><b>Loop back to Step 2</b><p>The pipeline never empties — new completed jobs flow in continuously from the client's job sheet, keeping the daily engine running. Negative-review handling escalates to live owner conversation.</p></div>
+        <div class="arrow-back">↺</div>
+      </div>
+
+      <div class="flow-out">
+        <div class="ic">✓</div>
+        <div><b>End-to-end outcome:</b> review count grows from the baseline (e.g. 14 → 46 in 90 days) without owner chasing customers; average star rating stays high because asks go only to happy "job complete" customers; replies are timely and on-brand.</div>
+      </div>
+    </div>
+
+    <!-- ===== FLOW 3 — TRACKING ===== -->
+    <div class="flow-wrap">
+      <div class="flow-heading">
+        <span class="badge b3">FLOW 03</span>
+        <h2>Tracking — End to End</h2>
+        <span class="tagline">GA4 + GTM + GSC + Looker</span>
+      </div>
+      <div class="flow-intro b3">
+        Set up once (Week 1, Day 2), then runs forever. Every signal — visitors, conversions, search clicks, AI traffic, brand mentions — flows into one Looker dashboard the client opens anytime.
+      </div>
+
+      <div class="step s1">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Setup (one-time, Week 1 Day 2)</div><div class="step-when">Task 9</div></div>
+        <ul>
+          <li>Create <b>GA4 property</b> under the <code>digi_design</code> account → record Measurement ID in <code>00_context/tracking-checklist.md</code>.</li>
+          <li>Install <b>GTM container</b> on the live site → verify it fires in GA4 DebugView.</li>
+          <li>Define <b>conversions</b>: form submit, phone click, WhatsApp click, GBP click.</li>
+          <li><b>Verify Search Console</b> via DNS; submit sitemap (<code>/sitemap.xml</code>).</li>
+          <li>Create <b>AI Referral segment</b> in GA4 → source matches <code>chatgpt|perplexity|gemini|claude|bing-chat|copilot</code>.</li>
+          <li>Activate <b>brand-mention monitor</b> (Google Alerts / Mention.com).</li>
+          <li>Clone <b>Looker Studio template</b> → swap data sources to this client's GA4 + GSC.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s2">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Data flows in (live, continuous)</div><div class="step-when">from launch onward</div></div>
+        <ul>
+          <li><b>Visitor lands</b> → GTM fires → GA4 records session, source, device, geography.</li>
+          <li><b>Visitor converts</b> → the matching event (form / phone / WhatsApp / GBP-click) increments.</li>
+          <li><b>Google crawls + indexes</b> → GSC populates clicks, impressions, position, Core Web Vitals.</li>
+          <li><b>Visitor arrives from ChatGPT / Perplexity / Gemini</b> → tagged automatically into the AI Referral segment.</li>
+          <li><b>Brand mentioned online</b> → monitor email arrives + logged in <code>10_geo_aieo/brand-mentions-log.xlsx</code>.</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s3">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Aggregate in Looker</div><div class="step-when">live, refreshes hourly</div></div>
+        <ul>
+          <li>Looker dashboard pulls <b>GA4 + GSC + AI Referral segment + brand-mention velocity</b> into one view.</li>
+          <li>Charts: organic sessions trend · top pages · conversions by source · AI Referral channel · GSC clicks &amp; positions · review count.</li>
+          <li>Dashboard URL saved in <code>00_context/about.md</code> → client opens it anytime, no login friction.</li>
+          <li>Shared with the client at Day-30 handoff (Week 4).</li>
+        </ul>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="step s4">
+        <div class="step-head"><div class="step-num">4</div><div class="step-title">Weekly &amp; monthly synthesis</div><div class="step-when">Mon 9 AM · 1st of month</div></div>
+        <ul>
+          <li><b>Mon 9 AM Weekly Report</b> auto-generated → emails the client a written summary (AI Referral, brand mentions, conversions, GEO wins, top movers).</li>
+          <li>Logged in <code>08_reports/changelog-YYYY-MM-DD.md</code>.</li>
+          <li><b>Monthly</b> the 80-row AEO+GEO+AIEO retest results feed back into the report.</li>
+          <li>Trend lines on Looker tell the longer story; the email tells the weekly story.</li>
+        </ul>
+      </div>
+
+      <div class="loop">
+        <div><b>Continuous loop</b><p>Once live, none of this needs re-setup. New conversions, new search clicks, new AI referrals, new mentions stream into the dashboard automatically. The client opens it anytime; the report lands every Monday.</p></div>
+        <div class="arrow-back">∞</div>
+      </div>
+
+      <div class="flow-out">
+        <div class="ic">✓</div>
+        <div><b>End-to-end outcome:</b> a single client-facing live dashboard + a weekly email update. Every fix from Tab 1 and every action from Tab 2 is measured and visible. No more guessing whether the SEO is "working."</div>
+      </div>
+    </div>
+
+    <div class="deliver">
+      <div class="icon">∞</div>
+      <div><h4>The three loops together</h4><p>AEO/AIEO/GEO grows brand visibility; review automation grows reputation; tracking proves it. All three run on the same Cowork + Semrush + Gmail + Calendar stack against the live Hostinger URL.</p></div>
+      <div class="seq">VISIBILITY · REPUTATION · PROOF</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Digi Design · Baptist Digitek · Compressed kickoff · Next.js static export on Hostinger</footer>
+
+<script>
+  document.querySelectorAll('.tab-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      const target = p.dataset.tab;
+      document.querySelectorAll('.tab-pill').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(v => v.classList.remove('active'));
+      p.classList.add('active');
+      document.querySelector('.panel[data-panel="' + target + '"]').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
